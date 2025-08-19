@@ -4,9 +4,9 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Create Super Admin user from environment variables
-  const superAdminEmail = 'admin@example.com'
-  const superAdminPassword = process.env.ADMIN_PASSWORD || 'dmorris'
+  // Create David Morris Super Admin user
+  const superAdminEmail = 'dmorris@dmsi.com'
+  const superAdminPassword = 'dmorris!'
   
   const existingSuperAdmin = await prisma.user.findUnique({
     where: { email: superAdminEmail }
@@ -18,7 +18,7 @@ async function main() {
     const superAdmin = await prisma.user.create({
       data: {
         email: superAdminEmail,
-        name: 'Super Administrator',
+        name: 'David Morris',
         hashedPassword,
         role: Role.SUPER_ADMIN,
       },
@@ -27,6 +27,31 @@ async function main() {
     console.log('Created Super Admin:', superAdmin.email)
   } else {
     console.log('Super Admin already exists:', existingSuperAdmin.email)
+  }
+
+  // Create legacy admin user for backwards compatibility
+  const legacyAdminEmail = 'admin@example.com'
+  const legacyAdminPassword = process.env.ADMIN_PASSWORD || 'dmorris'
+  
+  const existingLegacyAdmin = await prisma.user.findUnique({
+    where: { email: legacyAdminEmail }
+  })
+
+  if (!existingLegacyAdmin) {
+    const hashedPassword = await bcrypt.hash(legacyAdminPassword, 12)
+    
+    const legacyAdmin = await prisma.user.create({
+      data: {
+        email: legacyAdminEmail,
+        name: 'Legacy Administrator',
+        hashedPassword,
+        role: Role.SUPER_ADMIN,
+      },
+    })
+
+    console.log('Created Legacy Admin:', legacyAdmin.email)
+  } else {
+    console.log('Legacy Admin already exists:', existingLegacyAdmin.email)
   }
 
   // Create default user from environment variables
