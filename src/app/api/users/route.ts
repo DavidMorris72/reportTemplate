@@ -52,9 +52,9 @@ export async function GET(request: NextRequest) {
 
     const db = getDb();
     const users = await db`
-      SELECT id, email, name, role, created_at, updated_at 
+      SELECT id, email, name, role, "createdAt", "updatedAt" 
       FROM users 
-      ORDER BY created_at DESC
+      ORDER BY "createdAt" DESC
     `;
 
     return NextResponse.json({ users });
@@ -107,9 +107,9 @@ export async function POST(request: NextRequest) {
 
     // Create user
     const newUsers = await db`
-      INSERT INTO users (email, name, hashed_password, role)
+      INSERT INTO users (email, name, "hashedPassword", role)
       VALUES (${validatedData.email.toLowerCase()}, ${validatedData.name}, ${hashedPassword}, ${validatedData.role})
-      RETURNING id, email, name, role, created_at, updated_at
+      RETURNING id, email, name, role, "createdAt", "updatedAt"
     `;
 
     return NextResponse.json({ user: newUsers[0] }, { status: 201 });

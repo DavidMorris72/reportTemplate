@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       console.log("Database connection established for login");
       
       users = await db`
-        SELECT id, email, name, hashed_password, role 
+        SELECT id, email, name, "hashedPassword", role 
         FROM users 
         WHERE email = ${email.toLowerCase()}
       `;
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     const user = users[0];
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.hashed_password);
+    const isValidPassword = await bcrypt.compare(password, user.hashedPassword);
 
     if (!isValidPassword) {
       return NextResponse.json(

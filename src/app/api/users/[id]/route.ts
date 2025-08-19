@@ -48,7 +48,7 @@ export async function GET(
 
     const db = getDb();
     const users = await db`
-      SELECT id, email, name, role, created_at, updated_at 
+      SELECT id, email, name, role, "createdAt", "updatedAt" 
       FROM users 
       WHERE id = ${params.id}
     `;
@@ -119,12 +119,12 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updates: any = { updated_at: new Date() };
+    const updates: any = { updatedAt: new Date() };
     if (validatedData.email) updates.email = validatedData.email.toLowerCase();
     if (validatedData.name) updates.name = validatedData.name;
     if (validatedData.role) updates.role = validatedData.role;
     if (validatedData.password) {
-      updates.hashed_password = await bcrypt.hash(validatedData.password, 12);
+      updates.hashedPassword = await bcrypt.hash(validatedData.password, 12);
     }
 
     // Update user with individual queries for simplicity
@@ -133,56 +133,56 @@ export async function PUT(
       updatedUsers = await db`
         UPDATE users 
         SET email = ${updates.email}, name = ${updates.name}, role = ${updates.role}, 
-            hashed_password = ${updates.hashed_password}, updated_at = NOW()
+            "hashedPassword" = ${updates.hashedPassword}, "updatedAt" = NOW()
         WHERE id = ${params.id}
-        RETURNING id, email, name, role, created_at, updated_at
+        RETURNING id, email, name, role, "createdAt", "updatedAt"
       `;
     } else if (validatedData.email && validatedData.name && validatedData.role) {
       updatedUsers = await db`
         UPDATE users 
-        SET email = ${updates.email}, name = ${updates.name}, role = ${updates.role}, updated_at = NOW()
+        SET email = ${updates.email}, name = ${updates.name}, role = ${updates.role}, "updatedAt" = NOW()
         WHERE id = ${params.id}
-        RETURNING id, email, name, role, created_at, updated_at
+        RETURNING id, email, name, role, "createdAt", "updatedAt"
       `;
     } else if (validatedData.email && validatedData.name) {
       updatedUsers = await db`
         UPDATE users 
-        SET email = ${updates.email}, name = ${updates.name}, updated_at = NOW()
+        SET email = ${updates.email}, name = ${updates.name}, "updatedAt" = NOW()
         WHERE id = ${params.id}
-        RETURNING id, email, name, role, created_at, updated_at
+        RETURNING id, email, name, role, "createdAt", "updatedAt"
       `;
     } else if (validatedData.email) {
       updatedUsers = await db`
         UPDATE users 
-        SET email = ${updates.email}, updated_at = NOW()
+        SET email = ${updates.email}, "updatedAt" = NOW()
         WHERE id = ${params.id}
-        RETURNING id, email, name, role, created_at, updated_at
+        RETURNING id, email, name, role, "createdAt", "updatedAt"
       `;
     } else if (validatedData.name) {
       updatedUsers = await db`
         UPDATE users 
-        SET name = ${updates.name}, updated_at = NOW()
+        SET name = ${updates.name}, "updatedAt" = NOW()
         WHERE id = ${params.id}
-        RETURNING id, email, name, role, created_at, updated_at
+        RETURNING id, email, name, role, "createdAt", "updatedAt"
       `;
     } else if (validatedData.role) {
       updatedUsers = await db`
         UPDATE users 
-        SET role = ${updates.role}, updated_at = NOW()
+        SET role = ${updates.role}, "updatedAt" = NOW()
         WHERE id = ${params.id}
-        RETURNING id, email, name, role, created_at, updated_at
+        RETURNING id, email, name, role, "createdAt", "updatedAt"
       `;
     } else if (validatedData.password) {
       updatedUsers = await db`
         UPDATE users 
-        SET hashed_password = ${updates.hashed_password}, updated_at = NOW()
+        SET "hashedPassword" = ${updates.hashedPassword}, "updatedAt" = NOW()
         WHERE id = ${params.id}
-        RETURNING id, email, name, role, created_at, updated_at
+        RETURNING id, email, name, role, "createdAt", "updatedAt"
       `;
     } else {
       // No updates, just return current user
       updatedUsers = await db`
-        SELECT id, email, name, role, created_at, updated_at 
+        SELECT id, email, name, role, "createdAt", "updatedAt" 
         FROM users 
         WHERE id = ${params.id}
       `;
