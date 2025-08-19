@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { getJwtSecret } from "@/lib/env";
 import { z } from "zod";
 
@@ -46,6 +46,7 @@ export async function GET(
   try {
     await verifyAdminToken(request);
 
+    const db = getDb();
     const users = await db`
       SELECT id, email, name, role, created_at, updated_at 
       FROM users 
@@ -79,6 +80,7 @@ export async function PUT(
     const validatedData = UpdateUserSchema.parse(body);
 
     // Check if user exists
+    const db = getDb();
     const existingUsers = await db`
       SELECT id, email, role FROM users WHERE id = ${params.id}
     `;
@@ -213,6 +215,7 @@ export async function DELETE(
     const currentUser = await verifyAdminToken(request);
 
     // Check if user exists
+    const db = getDb();
     const existingUsers = await db`
       SELECT id, role FROM users WHERE id = ${params.id}
     `;

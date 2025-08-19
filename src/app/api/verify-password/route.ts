@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { getJwtSecret } from "@/lib/env";
 
 // Force runtime to be nodejs to ensure proper server-side execution
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user in database
+    const db = getDb();
     const users = await db`
       SELECT id, email, name, hashed_password, role 
       FROM users 

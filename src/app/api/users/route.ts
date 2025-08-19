@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { getJwtSecret } from "@/lib/env";
 import { z } from "zod";
 
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
   try {
     await verifyAdminToken(request);
 
+    const db = getDb();
     const users = await db`
       SELECT id, email, name, role, created_at, updated_at 
       FROM users 
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
     const validatedData = CreateUserSchema.parse(body);
 
     // Check if user already exists
+    const db = getDb();
     const existingUsers = await db`
       SELECT id FROM users WHERE email = ${validatedData.email.toLowerCase()}
     `;
