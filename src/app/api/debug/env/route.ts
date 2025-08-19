@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Force runtime to be nodejs to ensure proper server-side execution
 export const runtime = "nodejs";
+// Force dynamic rendering since we use searchParams
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/debug/env - Debug environment variables (TEMPORARY)
