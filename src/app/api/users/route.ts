@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
+import { getJwtSecret } from '@/lib/env';
 import { z } from 'zod';
+
+// Force runtime to be nodejs to ensure proper server-side execution
+export const runtime = 'nodejs';
 
 // Validation schemas
 const CreateUserSchema = z.object({
@@ -28,7 +32,7 @@ async function verifyAdminToken(request: NextRequest) {
   }
 
   try {
-    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+    const jwtSecret = getJwtSecret();
     const decoded = jwt.verify(token, jwtSecret) as any;
     
     if (decoded.role !== 'ADMIN' && decoded.role !== 'SUPER_ADMIN') {
@@ -44,6 +48,14 @@ async function verifyAdminToken(request: NextRequest) {
 // GET /api/users - List all users
 export async function GET(request: NextRequest) {
   try {
+    // Check if Prisma client is available
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 503 }
+      );
+    }
+
     await verifyAdminToken(request);
 
     const users = await prisma.user.findMany({
@@ -73,6 +85,14 @@ export async function GET(request: NextRequest) {
 // POST /api/users - Create new user
 export async function POST(request: NextRequest) {
   try {
+    // Check if Prisma client is available
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 503 }
+      );
+    }
+
     const currentUser = await verifyAdminToken(request);
     const body = await request.json();
 
@@ -128,7 +148,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data', details: error.issues },
         { status: 400 }
       );
     }

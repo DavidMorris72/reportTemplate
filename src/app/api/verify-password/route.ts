@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
+import { getJwtSecret } from '@/lib/env';
+
+// Force runtime to be nodejs to ensure proper server-side execution
+export const runtime = 'nodejs';
 
 /**
  * POST /api/verify-password
@@ -20,6 +24,14 @@ import { prisma } from '@/lib/prisma';
  */
 export async function POST(request: NextRequest) {
   try {
+    // Check if Prisma client is available
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 503 }
+      );
+    }
+
     const { email, password } = await request.json();
     
     if (!email || !password) {
@@ -52,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate JWT token
-    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+    const jwtSecret = getJwtSecret();
     const token = jwt.sign(
       { 
         userId: user.id,
