@@ -34,12 +34,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user in database
-    const db = getDb();
-    const users = await db`
-      SELECT id, email, name, hashed_password, role 
-      FROM users 
-      WHERE email = ${email.toLowerCase()}
-    `;
+    let users;
+    try {
+      const db = getDb();
+      console.log("Database connection established for login");
+      
+      users = await db`
+        SELECT id, email, name, hashed_password, role 
+        FROM users 
+        WHERE email = ${email.toLowerCase()}
+      `;
+      
+      console.log(`Found ${users.length} users for email: ${email}`);
+    } catch (dbError) {
+      console.error("Database error during login:", dbError);
+      return NextResponse.json(
+        { error: "Database connection failed", details: dbError instanceof Error ? dbError.message : "Unknown error" },
+        { status: 503 },
+      );
+    }
 
     if (users.length === 0) {
       return NextResponse.json(
