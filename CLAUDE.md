@@ -26,30 +26,24 @@ A complete admin dashboard with user management has been implemented, featuring:
 ### Technology Stack
 
 - **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
-- **Database**: Neon PostgreSQL
-- **ORM**: Prisma Client
+- **Database**: Neon PostgreSQL with serverless driver
 - **Authentication**: JWT + bcrypt
 - **UI Components**: Radix UI components
 - **Icons**: Lucide React
 
 ### Database Schema
 
-```prisma
-model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  name           String
-  hashedPassword String
-  role           Role     @default(USER)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-}
-
-enum Role {
-  USER
-  ADMIN
-  SUPER_ADMIN
-}
+```sql
+-- User table for authentication and role management
+CREATE TABLE users (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    email TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    hashed_password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'USER' CHECK (role IN ('USER', 'ADMIN', 'SUPER_ADMIN')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 ```
 
 ## Authentication System
@@ -212,17 +206,9 @@ OPENAI_API_KEY="your_openai_api_key"
 ### Database Operations
 
 ```bash
-# Generate Prisma client
-npx prisma generate
-
-# Push schema to database
-npx prisma db push
-
-# Seed database with initial users
-npx prisma db seed
-
-# View database in Prisma Studio
-npx prisma studio
+# Run the SQL schema to set up the database
+# Execute the contents of schema.sql in your Neon database console
+# or run it via psql: psql $DATABASE_URL < schema.sql
 ```
 
 ### Development Server
@@ -259,13 +245,11 @@ src/
 │   ├── ui/               # Radix UI components
 │   └── Header.tsx        # App header with admin link
 ├── lib/                  # Utility libraries
-│   ├── prisma.ts         # Prisma client instance
+│   ├── db.ts             # Neon serverless database connection
 │   └── utils.ts          # General utilities
 └── middleware.ts         # Route protection middleware
 
-prisma/
-├── schema.prisma         # Database schema
-└── seed.ts              # Database seeding script
+schema.sql                # Database schema and initial data
 ```
 
 ## Security Considerations
@@ -301,15 +285,15 @@ prisma/
 - Verify user exists in database with correct role
 - Clear localStorage and re-authenticate
 
-**Prisma Issues**
+**Database Issues**
 
-- Run `npx prisma generate` after schema changes
-- Use `npx prisma db push` for development schema updates
-- Check database connection string format
+- Ensure DATABASE_URL is properly configured for Neon serverless
+- Check that the database schema has been applied
+- Verify database connection string format
 
 ### Development Tips
 
-- Use Prisma Studio to inspect database data
+- Use Neon console or psql to inspect database data
 - Check browser Network tab for API call details
 - Use React DevTools to inspect component state
 - Monitor Next.js dev server console for errors

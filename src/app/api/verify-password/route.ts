@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { getJwtSecret } from "@/lib/env";
 
 // Force runtime to be nodejs to ensure proper server-side execution
@@ -24,33 +24,6 @@ export const runtime = "nodejs";
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check if Prisma client is available
-    if (!prisma) {
-      console.error("Prisma client is null - database connection failed");
-      console.error("Environment check:", {
-        NODE_ENV: process.env.NODE_ENV,
-        DATABASE_URL_SET: !!process.env.DATABASE_URL,
-        POSTGRES_PRISMA_URL_SET: !!process.env.POSTGRES_PRISMA_URL,
-        POSTGRES_URL_SET: !!process.env.POSTGRES_URL,
-        POSTGRES_URL_NON_POOLING_SET: !!process.env.POSTGRES_URL_NON_POOLING,
-      });
-      return NextResponse.json(
-        { error: "Database not available" },
-        { status: 503 },
-      );
-    }
-
-    // Test database connection
-    try {
-      await prisma.$connect();
-    } catch (error) {
-      console.error("Failed to connect to database:", error);
-      return NextResponse.json(
-        { error: "Database connection failed" },
-        { status: 503 },
-      );
-    }
-
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -61,19 +34,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user in database
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
-    });
+    const users = await db`
+      SELECT id, email, name, hashed_password, role 
+      FROM users 
+      WHERE email = ${email.toLowerCase()}
+    `;
 
-    if (!user) {
+    if (users.length === 0) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 },
       );
     }
 
+    const user = users[0];
+
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.hashedPassword);
+    const isValidPassword = await bcrypt.compare(password, user.hashed_password);
 
     if (!isValidPassword) {
       return NextResponse.json(

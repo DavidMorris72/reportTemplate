@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { getJwtSecret } from "@/lib/env";
 import { z } from "zod";
 
@@ -44,33 +44,19 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
-    // Check if Prisma client is available
-    if (!prisma) {
-      return NextResponse.json(
-        { error: "Database not available" },
-        { status: 503 },
-      );
-    }
-
     await verifyAdminToken(request);
 
-    const user = await prisma.user.findUnique({
-      where: { id: params.id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const users = await db`
+      SELECT id, email, name, role, created_at, updated_at 
+      FROM users 
+      WHERE id = ${params.id}
+    `;
 
-    if (!user) {
+    if (users.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ user });
+    return NextResponse.json({ user: users[0] });
   } catch (error: any) {
     console.error("Error fetching user:", error);
     return NextResponse.json(
@@ -86,14 +72,6 @@ export async function PUT(
   { params }: { params: { id: string } },
 ) {
   try {
-    // Check if Prisma client is available
-    if (!prisma) {
-      return NextResponse.json(
-        { error: "Database not available" },
-        { status: 503 },
-      );
-    }
-
     const currentUser = await verifyAdminToken(request);
     const body = await request.json();
 
@@ -101,21 +79,23 @@ export async function PUT(
     const validatedData = UpdateUserSchema.parse(body);
 
     // Check if user exists
-    const existingUser = await prisma.user.findUnique({
-      where: { id: params.id },
-    });
+    const existingUsers = await db`
+      SELECT id, email, role FROM users WHERE id = ${params.id}
+    `;
 
-    if (!existingUser) {
+    if (existingUsers.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const existingUser = existingUsers[0];
+
     // Check if email is being changed and already exists
     if (validatedData.email && validatedData.email !== existingUser.email) {
-      const emailExists = await prisma.user.findUnique({
-        where: { email: validatedData.email.toLowerCase() },
-      });
+      const emailExists = await db`
+        SELECT id FROM users WHERE email = ${validatedData.email.toLowerCase()}
+      `;
 
-      if (emailExists) {
+      if (emailExists.length > 0) {
         return NextResponse.json(
           { error: "User with this email already exists" },
           { status: 400 },
@@ -137,30 +117,76 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: any = {};
-    if (validatedData.email)
-      updateData.email = validatedData.email.toLowerCase();
-    if (validatedData.name) updateData.name = validatedData.name;
-    if (validatedData.role) updateData.role = validatedData.role;
+    const updates: any = { updated_at: new Date() };
+    if (validatedData.email) updates.email = validatedData.email.toLowerCase();
+    if (validatedData.name) updates.name = validatedData.name;
+    if (validatedData.role) updates.role = validatedData.role;
     if (validatedData.password) {
-      updateData.hashedPassword = await bcrypt.hash(validatedData.password, 12);
+      updates.hashed_password = await bcrypt.hash(validatedData.password, 12);
     }
 
-    // Update user
-    const updatedUser = await prisma.user.update({
-      where: { id: params.id },
-      data: updateData,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    // Update user with individual queries for simplicity
+    let updatedUsers;
+    if (validatedData.email && validatedData.name && validatedData.role && validatedData.password) {
+      updatedUsers = await db`
+        UPDATE users 
+        SET email = ${updates.email}, name = ${updates.name}, role = ${updates.role}, 
+            hashed_password = ${updates.hashed_password}, updated_at = NOW()
+        WHERE id = ${params.id}
+        RETURNING id, email, name, role, created_at, updated_at
+      `;
+    } else if (validatedData.email && validatedData.name && validatedData.role) {
+      updatedUsers = await db`
+        UPDATE users 
+        SET email = ${updates.email}, name = ${updates.name}, role = ${updates.role}, updated_at = NOW()
+        WHERE id = ${params.id}
+        RETURNING id, email, name, role, created_at, updated_at
+      `;
+    } else if (validatedData.email && validatedData.name) {
+      updatedUsers = await db`
+        UPDATE users 
+        SET email = ${updates.email}, name = ${updates.name}, updated_at = NOW()
+        WHERE id = ${params.id}
+        RETURNING id, email, name, role, created_at, updated_at
+      `;
+    } else if (validatedData.email) {
+      updatedUsers = await db`
+        UPDATE users 
+        SET email = ${updates.email}, updated_at = NOW()
+        WHERE id = ${params.id}
+        RETURNING id, email, name, role, created_at, updated_at
+      `;
+    } else if (validatedData.name) {
+      updatedUsers = await db`
+        UPDATE users 
+        SET name = ${updates.name}, updated_at = NOW()
+        WHERE id = ${params.id}
+        RETURNING id, email, name, role, created_at, updated_at
+      `;
+    } else if (validatedData.role) {
+      updatedUsers = await db`
+        UPDATE users 
+        SET role = ${updates.role}, updated_at = NOW()
+        WHERE id = ${params.id}
+        RETURNING id, email, name, role, created_at, updated_at
+      `;
+    } else if (validatedData.password) {
+      updatedUsers = await db`
+        UPDATE users 
+        SET hashed_password = ${updates.hashed_password}, updated_at = NOW()
+        WHERE id = ${params.id}
+        RETURNING id, email, name, role, created_at, updated_at
+      `;
+    } else {
+      // No updates, just return current user
+      updatedUsers = await db`
+        SELECT id, email, name, role, created_at, updated_at 
+        FROM users 
+        WHERE id = ${params.id}
+      `;
+    }
 
-    return NextResponse.json({ user: updatedUser });
+    return NextResponse.json({ user: updatedUsers[0] });
   } catch (error: any) {
     console.error("Error updating user:", error);
 
@@ -184,24 +210,18 @@ export async function DELETE(
   { params }: { params: { id: string } },
 ) {
   try {
-    // Check if Prisma client is available
-    if (!prisma) {
-      return NextResponse.json(
-        { error: "Database not available" },
-        { status: 503 },
-      );
-    }
-
     const currentUser = await verifyAdminToken(request);
 
     // Check if user exists
-    const existingUser = await prisma.user.findUnique({
-      where: { id: params.id },
-    });
+    const existingUsers = await db`
+      SELECT id, role FROM users WHERE id = ${params.id}
+    `;
 
-    if (!existingUser) {
+    if (existingUsers.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+
+    const existingUser = existingUsers[0];
 
     // Prevent self-deletion
     if (existingUser.id === currentUser.userId) {
@@ -222,9 +242,7 @@ export async function DELETE(
     }
 
     // Delete user
-    await prisma.user.delete({
-      where: { id: params.id },
-    });
+    await db`DELETE FROM users WHERE id = ${params.id}`;
 
     return NextResponse.json({ message: "User deleted successfully" });
   } catch (error: any) {

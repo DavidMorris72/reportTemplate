@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { getJwtSecret } from "@/lib/env";
 import { z } from "zod";
 
@@ -48,29 +48,13 @@ async function verifyAdminToken(request: NextRequest) {
 // GET /api/users - List all users
 export async function GET(request: NextRequest) {
   try {
-    // Check if Prisma client is available
-    if (!prisma) {
-      return NextResponse.json(
-        { error: "Database not available" },
-        { status: 503 },
-      );
-    }
-
     await verifyAdminToken(request);
 
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const users = await db`
+      SELECT id, email, name, role, created_at, updated_at 
+      FROM users 
+      ORDER BY created_at DESC
+    `;
 
     return NextResponse.json({ users });
   } catch (error: any) {
@@ -85,14 +69,6 @@ export async function GET(request: NextRequest) {
 // POST /api/users - Create new user
 export async function POST(request: NextRequest) {
   try {
-    // Check if Prisma client is available
-    if (!prisma) {
-      return NextResponse.json(
-        { error: "Database not available" },
-        { status: 503 },
-      );
-    }
-
     const currentUser = await verifyAdminToken(request);
     const body = await request.json();
 
@@ -100,11 +76,11 @@ export async function POST(request: NextRequest) {
     const validatedData = CreateUserSchema.parse(body);
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: validatedData.email.toLowerCase() },
-    });
+    const existingUsers = await db`
+      SELECT id FROM users WHERE email = ${validatedData.email.toLowerCase()}
+    `;
 
-    if (existingUser) {
+    if (existingUsers.length > 0) {
       return NextResponse.json(
         { error: "User with this email already exists" },
         { status: 400 },
@@ -128,24 +104,13 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(validatedData.password, 12);
 
     // Create user
-    const newUser = await prisma.user.create({
-      data: {
-        email: validatedData.email.toLowerCase(),
-        name: validatedData.name,
-        hashedPassword,
-        role: validatedData.role,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const newUsers = await db`
+      INSERT INTO users (email, name, hashed_password, role)
+      VALUES (${validatedData.email.toLowerCase()}, ${validatedData.name}, ${hashedPassword}, ${validatedData.role})
+      RETURNING id, email, name, role, created_at, updated_at
+    `;
 
-    return NextResponse.json({ user: newUser }, { status: 201 });
+    return NextResponse.json({ user: newUsers[0] }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating user:", error);
 
