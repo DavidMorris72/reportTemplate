@@ -297,7 +297,7 @@ prisma/
 
 **Authentication Issues**
 
-- Check JWT_SECRET is set
+- Check JWT_SECRET is set in Vercel as well
 - Verify user exists in database with correct role
 - Clear localStorage and re-authenticate
 
