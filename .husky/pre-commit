@@ -1,0 +1,15 @@
+echo "🔍 Running pre-commit checks..."
+
+# Auto-fix linting issues
+echo "🔧 Auto-fixing lint issues..."
+npm run lint:fix
+
+# Auto-format code  
+echo "🎨 Formatting code..."
+npm run format
+
+# Type checking
+echo "🔎 Type checking..."
+npm run type-check
+
+echo "✅ Pre-commit checks completed!"

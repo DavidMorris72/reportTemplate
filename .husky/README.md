@@ -1,0 +1,1 @@
+# Husky Quality Gates Setup
