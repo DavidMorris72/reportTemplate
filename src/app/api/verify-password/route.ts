@@ -32,9 +32,21 @@ export async function POST(request: NextRequest) {
         DATABASE_URL_SET: !!process.env.DATABASE_URL,
         POSTGRES_PRISMA_URL_SET: !!process.env.POSTGRES_PRISMA_URL,
         POSTGRES_URL_SET: !!process.env.POSTGRES_URL,
+        POSTGRES_URL_NON_POOLING_SET: !!process.env.POSTGRES_URL_NON_POOLING,
       });
       return NextResponse.json(
         { error: "Database not available" },
+        { status: 503 },
+      );
+    }
+
+    // Test database connection
+    try {
+      await prisma.$connect();
+    } catch (error) {
+      console.error("Failed to connect to database:", error);
+      return NextResponse.json(
+        { error: "Database connection failed" },
         { status: 503 },
       );
     }
