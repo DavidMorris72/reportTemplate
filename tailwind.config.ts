@@ -52,6 +52,18 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // DMSI Brand Colors
+        brand: {
+          primary: '#cd442c',
+          'primary-gray': '#4d504e',
+          'secondary-blue': '#006ca7',
+          'secondary-green': '#6fb544',
+          'secondary-yellow': '#eaab30',
+          'tertiary-teal': '#42b59f',
+          'tertiary-purple': '#612b52',
+          'logo-red': '#e04403',
+          'logo-gray': '#56585b'
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

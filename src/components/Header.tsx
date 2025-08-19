@@ -1,11 +1,12 @@
 import { Settings } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import React from 'react';
 
 interface HeaderProps {
   showLogout?: boolean;
   onLogout?: () => void;
-  userRole?: 'user' | 'admin';
+  userRole?: 'user' | 'admin' | 'super_admin';
 }
 
 const Header: React.FC<HeaderProps> = ({ showLogout = true, onLogout, userRole }) => {
@@ -14,10 +15,17 @@ const Header: React.FC<HeaderProps> = ({ showLogout = true, onLogout, userRole }
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
-            {/* Generic Brand Logo - Replace with your branding */}
+            {/* DMSI Logo and Branding */}
             <Link href="/" className="flex items-center space-x-6 hover:opacity-80 transition-opacity">
               <div className="h-12 flex items-center">
-                <div className="text-2xl font-bold text-gray-800">Your Brand</div>
+                <Image
+                  src="/dmsi-logo.svg"
+                  alt="DMSI Logo"
+                  width={120}
+                  height={32}
+                  className="h-8 w-auto"
+                  priority
+                />
               </div>
               <div className="border-l border-gray-300 pl-6 h-12 flex items-center">
                 <p className="text-2xl font-medium text-gray-700">AI Toolkit</p>
@@ -26,12 +34,12 @@ const Header: React.FC<HeaderProps> = ({ showLogout = true, onLogout, userRole }
           </div>
           
           <div className="flex items-center space-x-4">
-            {/* Admin-only Settings Icon */}
-            {userRole === 'admin' && (
+            {/* Admin/Super Admin Settings Icon */}
+            {(userRole === 'admin' || userRole === 'super_admin') && (
               <Link 
                 href="/admin"
                 className="p-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 group"
-                title="Admin Settings"
+                title="Admin Dashboard"
               >
                 <Settings 
                   size={20} 
@@ -45,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({ showLogout = true, onLogout, userRole }
               onClick={onLogout}
               className="text-white px-4 py-2 rounded-lg text-sm transition-colors bg-blue-600 hover:bg-blue-700"
               >
-                {userRole === 'admin' ? 'Admin Logout' : 'Logout'}
+                {userRole === 'admin' ? 'Admin Logout' : userRole === 'super_admin' ? 'Super Admin Logout' : 'Logout'}
               </button>
             )}
           </div>

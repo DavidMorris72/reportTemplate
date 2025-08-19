@@ -1,5 +1,6 @@
 "use client";
 import { Lock, Loader2, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import Header from '../components/Header';
@@ -20,20 +21,37 @@ import ToolSection from '../components/ToolSection';
 
 const AIToolkit = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [userRole, setUserRole] = useState<'user' | 'admin'>('user');
-  const [currentUserRole, setCurrentUserRole] = useState<'user' | 'admin' | null>(null);
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    email: string;
+    name: string;
+    role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+  } | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   
   useEffect(() => {
-    // Check if user is already authenticated (stored in localStorage)
+    // Check if user is already authenticated (JWT token in localStorage)
     const checkAuth = () => {
-      const authenticated = localStorage.getItem('ai_toolkit_authenticated') === 'true';
-      const storedRole = localStorage.getItem('ai_toolkit_user_role') as 'user' | 'admin' | null;
-      console.log('Authentication check:', { authenticated, role: storedRole });
-      setIsAuthenticated(authenticated);
-      setCurrentUserRole(storedRole || 'user');
+      const token = localStorage.getItem('ai_toolkit_token');
+      const userData = localStorage.getItem('ai_toolkit_user');
+      
+      if (token && userData) {
+        try {
+          const user = JSON.parse(userData);
+          setIsAuthenticated(true);
+          setCurrentUser(user);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+          localStorage.removeItem('ai_toolkit_token');
+          localStorage.removeItem('ai_toolkit_user');
+          setIsAuthenticated(false);
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
     };
     
     // Small delay to ensure DOM is ready
@@ -46,48 +64,47 @@ const AIToolkit = () => {
     setIsAuthenticating(true);
     
     try {
-      console.log('Submitting credentials:', { role: userRole });
       const response = await fetch('/api/verify-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password, role: userRole }),
+        body: JSON.stringify({ email, password }),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to verify password');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to verify credentials');
       }
       
-      const { isValid, role } = await response.json();
-      console.log('Password verification response:', { isValid, role });
+      const { isValid, token, user } = await response.json();
       
-      if (isValid && role) {
-        console.log('Authentication successful, setting state');
+      if (isValid && token && user) {
         setIsAuthenticated(true);
-        setCurrentUserRole(role);
-        localStorage.setItem('ai_toolkit_authenticated', 'true');
-        localStorage.setItem('ai_toolkit_user_role', role);
+        setCurrentUser(user);
+        localStorage.setItem('ai_toolkit_token', token);
+        localStorage.setItem('ai_toolkit_user', JSON.stringify(user));
         setPasswordError('');
       } else {
-        setPasswordError('Incorrect password. Please try again.');
+        setPasswordError('Invalid credentials. Please try again.');
         setPassword('');
       }
-    } catch (error) {
-      console.error('Password verification error:', error);
-      setPasswordError('Error verifying password. Please try again.');
+    } catch (error: any) {
+      console.error('Authentication error:', error);
+      setPasswordError(error.message || 'Error verifying credentials. Please try again.');
       setPassword('');
     } finally {
       setIsAuthenticating(false);
     }
-  }, [password, userRole]);
+  }, [email, password]);
   
   const handleLogout = useCallback(() => {
     console.log('Logging out...');
     setIsAuthenticated(false);
-    setCurrentUserRole(null);
-    localStorage.removeItem('ai_toolkit_authenticated');
-    localStorage.removeItem('ai_toolkit_user_role');
+    setCurrentUser(null);
+    localStorage.removeItem('ai_toolkit_token');
+    localStorage.removeItem('ai_toolkit_user');
+    setEmail('');
     setPassword('');
   }, []);
 
@@ -186,36 +203,47 @@ const AIToolkit = () => {
   // Show enhanced password screen if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-          {/* Header with gradient */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-700 p-6 text-center">
-            <Lock className="mx-auto text-white mb-3" size={40} />
+          {/* Header with DMSI branding */}
+          <div className="bg-gradient-to-r from-brand-primary to-brand-logo-red p-6 text-center">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/dmsi-logo.svg"
+                alt="DMSI Logo"
+                width={150}
+                height={40}
+                className="h-10 w-auto filter brightness-0 invert"
+                priority
+              />
+            </div>
             <h1 className="text-2xl font-bold text-white mb-1">AI Toolkit</h1>
-            <p className="text-blue-100 text-sm">Secure Access Portal</p>
+            <p className="text-red-100 text-sm">Secure Access Portal</p>
           </div>
           
           <div className="p-8">
             <div className="text-center mb-6">
               <p className="text-gray-600 mb-4">Please authenticate to access the toolkit</p>
               <div className="flex justify-center space-x-2 mb-4">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                <div className="w-2 h-2 bg-brand-secondary-blue rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-brand-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-brand-secondary-green rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
               </div>
             </div>
           
             <form onSubmit={handlePasswordSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Access Level</label>
-                <select
-                  value={userRole}
-                  onChange={(e) => setUserRole(e.target.value as 'user' | 'admin')}
-                  className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 shadow-sm hover:shadow-md"
-                >
-                  <option value="user">👤 User Access</option>
-                  <option value="admin">🔧 Admin Access</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-secondary-blue focus:border-brand-secondary-blue transition-all duration-200 shadow-sm hover:shadow-md"
+                  placeholder="Enter your email"
+                  required
+                  disabled={isAuthenticating}
+                />
               </div>
               
               <div>
@@ -225,7 +253,7 @@ const AIToolkit = () => {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-secondary-blue focus:border-brand-secondary-blue transition-all duration-200 shadow-sm hover:shadow-md"
                   placeholder="Enter your password"
                   required
                   disabled={isAuthenticating}
@@ -242,7 +270,7 @@ const AIToolkit = () => {
               <button
                 type="submit"
                 disabled={isAuthenticating}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-700 text-white py-4 px-4 rounded-xl hover:from-blue-700 hover:to-purple-800 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                className="w-full bg-gradient-to-r from-brand-primary to-brand-logo-red text-white py-4 px-4 rounded-xl hover:from-red-700 hover:to-red-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
               >
                 {isAuthenticating ? (
                   <>
@@ -272,19 +300,22 @@ const AIToolkit = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <Header onLogout={handleLogout} userRole={currentUserRole || 'user'} />
+      <Header onLogout={handleLogout} userRole={
+        currentUser?.role === 'ADMIN' ? 'admin' : 
+        currentUser?.role === 'SUPER_ADMIN' ? 'super_admin' : 'user'
+      } />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-6 rounded-lg mb-8 shadow-lg">
+        <div className="bg-gradient-to-r from-brand-primary to-brand-logo-red text-white p-6 rounded-lg mb-8 shadow-lg">
           <div className="flex items-center">
             <div>
               <h1 className="text-3xl font-bold mb-2 flex items-center">
                 <Sparkles className="mr-3" size={36} />
                 AI Toolkit
               </h1>
-              <p className="text-blue-100">AI-powered tools for modern applications</p>
+              <p className="text-red-100">AI-powered tools for modern applications</p>
             </div>
           </div>
         </div>
@@ -322,7 +353,7 @@ const AIToolkit = () => {
             {/* Brand Section */}
             <div className="text-center md:text-left">
               <h3 className="text-xl font-bold mb-3 flex items-center justify-center md:justify-start space-x-2">
-                <Sparkles size={20} className="text-blue-400" />
+                <Sparkles size={20} className="text-brand-secondary-blue" />
                 <span>AI Toolkit</span>
               </h3>
               <p className="text-gray-300 text-sm">
@@ -335,11 +366,11 @@ const AIToolkit = () => {
               <h4 className="text-lg font-semibold mb-3">Platform Status</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-center md:justify-end space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-brand-secondary-green rounded-full animate-pulse"></div>
                   <span className="text-gray-300">All Systems Operational</span>
                 </div>
                 <div className="flex items-center justify-center md:justify-end space-x-2">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-brand-secondary-blue rounded-full animate-pulse"></div>
                   <span className="text-gray-300">AI Services Active</span>
                 </div>
               </div>

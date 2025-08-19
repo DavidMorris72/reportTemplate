@@ -40,3 +40,5 @@ next-env.d.ts
 temp_*.mjs
 temp_*.js
 *.tmp
+
+/src/generated/prisma

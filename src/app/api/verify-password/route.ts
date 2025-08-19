@@ -1,65 +1,77 @@
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { prisma } from '@/lib/prisma';
 
 /**
  * POST /api/verify-password
  * 
- * Authenticates users by validating their password and role against the configured
- * environment variables. Supports both 'user' and 'admin' roles.
+ * Authenticates users by validating their email and password against the database.
+ * Supports 'USER', 'ADMIN', and 'SUPER_ADMIN' roles.
  * 
  * Security considerations:
- * - Password comparison is performed server-side only
- * - No password hashing (suitable for simple applications with limited users)
- * - Environment variable validation ensures proper configuration
+ * - Password hashing with bcrypt
+ * - JWT token generation for sessions
+ * - Database-based user management
  * - Role-based authentication for access control
  * 
- * @param request - NextRequest containing the password and role to verify
- * @returns NextResponse indicating whether the credentials are valid and the user role
+ * @param request - NextRequest containing the email and password to verify
+ * @returns NextResponse with JWT token and user info if valid
  */
 export async function POST(request: NextRequest) {
   try {
-    const { password, role = 'user' } = await request.json();
+    const { email, password } = await request.json();
     
-    if (!password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'Password is required' },
+        { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
-    if (!role || !['user', 'admin'].includes(role)) {
+    // Find user in database
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+
+    if (!user) {
       return NextResponse.json(
-        { error: 'Invalid role specified' },
-        { status: 400 }
+        { error: 'Invalid credentials' },
+        { status: 401 }
       );
     }
 
-    let correctPassword: string | undefined;
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.hashedPassword);
     
-    if (role === 'admin') {
-      correctPassword = process.env.ADMIN_PASSWORD;
-      if (!correctPassword) {
-        console.error('ADMIN_PASSWORD environment variable not set');
-        return NextResponse.json(
-          { error: 'Admin access not configured' },
-          { status: 500 }
-        );
-      }
-    } else {
-      correctPassword = process.env.APP_PASSWORD;
-      if (!correctPassword) {
-        console.error('APP_PASSWORD environment variable not set');
-        return NextResponse.json(
-          { error: 'User access not configured' },
-          { status: 500 }
-        );
-      }
+    if (!isValidPassword) {
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      );
     }
 
-    const isValid = password === correctPassword;
-    
+    // Generate JWT token
+    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+    const token = jwt.sign(
+      { 
+        userId: user.id,
+        email: user.email,
+        role: user.role 
+      },
+      jwtSecret,
+      { expiresIn: '24h' }
+    );
+
     return NextResponse.json({ 
-      isValid,
-      role: isValid ? role : null
+      isValid: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
     });
     
   } catch (error) {
