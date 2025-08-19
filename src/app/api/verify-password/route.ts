@@ -26,6 +26,13 @@ export async function POST(request: NextRequest) {
   try {
     // Check if Prisma client is available
     if (!prisma) {
+      console.error('Prisma client is null - database connection failed');
+      console.error('Environment check:', {
+        NODE_ENV: process.env.NODE_ENV,
+        DATABASE_URL_SET: !!process.env.DATABASE_URL,
+        POSTGRES_PRISMA_URL_SET: !!process.env.POSTGRES_PRISMA_URL,
+        POSTGRES_URL_SET: !!process.env.POSTGRES_URL
+      });
       return NextResponse.json(
         { error: 'Database not available' },
         { status: 503 }
