@@ -7,7 +7,7 @@ export function validateEnvironmentVariables() {
   };
 
   const missing: string[] = [];
-  
+
   Object.entries(requiredEnvVars).forEach(([key, value]) => {
     if (!value) {
       missing.push(key);
@@ -25,15 +25,15 @@ export function validateEnvironmentVariables() {
 export function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required');
+    throw new Error("JWT_SECRET environment variable is required");
   }
   return secret;
 }
 
 export function isDevelopment(): boolean {
-  return process.env.NODE_ENV === 'development';
+  return process.env.NODE_ENV === "development";
 }
 
 export function isProduction(): boolean {
-  return process.env.NODE_ENV === 'production';
+  return process.env.NODE_ENV === "production";
 }

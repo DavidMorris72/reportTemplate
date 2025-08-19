@@ -1,16 +1,16 @@
 "use client";
-import { UserPlus, ArrowLeft, Save, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import { UserPlus, ArrowLeft, Save, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 
-import Header from '../../../../components/Header';
+import Header from "../../../../components/Header";
 
 interface CurrentUser {
   id: string;
   email: string;
   name: string;
-  role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+  role: "USER" | "ADMIN" | "SUPER_ADMIN";
 }
 
 const NewUser = () => {
@@ -18,111 +18,113 @@ const NewUser = () => {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
-  
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
-    email: '',
-    name: '',
-    password: '',
-    confirmPassword: '',
-    role: 'USER' as 'USER' | 'ADMIN' | 'SUPER_ADMIN'
+    email: "",
+    name: "",
+    password: "",
+    confirmPassword: "",
+    role: "USER" as "USER" | "ADMIN" | "SUPER_ADMIN",
   });
 
   useEffect(() => {
     // Check authentication
-    const userData = localStorage.getItem('ai_toolkit_user');
-    const token = localStorage.getItem('ai_toolkit_token');
-    
+    const userData = localStorage.getItem("ai_toolkit_user");
+    const token = localStorage.getItem("ai_toolkit_token");
+
     if (!token || !userData) {
-      router.push('/');
+      router.push("/");
       return;
     }
 
     try {
       const user = JSON.parse(userData);
-      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
         setCurrentUser(user);
       } else {
-        router.push('/');
+        router.push("/");
         return;
       }
     } catch (error) {
-      console.error('Error parsing user data:', error);
-      router.push('/');
+      console.error("Error parsing user data:", error);
+      router.push("/");
       return;
     }
-    
+
     setIsLoading(false);
   }, [router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Clear error when user starts typing
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Validation
     if (!formData.email || !formData.name || !formData.password) {
-      setError('Please fill in all required fields');
+      setError("Please fill in all required fields");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError("Password must be at least 6 characters long");
       return;
     }
 
-    const token = localStorage.getItem('ai_toolkit_token');
+    const token = localStorage.getItem("ai_toolkit_token");
     setIsSaving(true);
 
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
+      const response = await fetch("/api/users", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           email: formData.email,
           name: formData.name,
           password: formData.password,
-          role: formData.role
+          role: formData.role,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create user');
+        throw new Error(errorData.error || "Failed to create user");
       }
 
       // Success! Redirect to users list
-      router.push('/admin/users');
+      router.push("/admin/users");
     } catch (error: any) {
-      console.error('Error creating user:', error);
-      setError(error.message || 'Failed to create user');
+      console.error("Error creating user:", error);
+      setError(error.message || "Failed to create user");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('ai_toolkit_token');
-    localStorage.removeItem('ai_toolkit_user');
-    router.push('/');
+    localStorage.removeItem("ai_toolkit_token");
+    localStorage.removeItem("ai_toolkit_user");
+    router.push("/");
   };
 
   if (isLoading) {
@@ -138,9 +140,9 @@ const NewUser = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <Header 
-        onLogout={handleLogout} 
-        userRole={currentUser?.role === 'ADMIN' ? 'admin' : 'super_admin'} 
+      <Header
+        onLogout={handleLogout}
+        userRole={currentUser?.role === "ADMIN" ? "admin" : "super_admin"}
       />
 
       {/* Main Content */}
@@ -174,7 +176,10 @@ const NewUser = () => {
 
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Full Name *
               </label>
               <input
@@ -191,7 +196,10 @@ const NewUser = () => {
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email Address *
               </label>
               <input
@@ -208,7 +216,10 @@ const NewUser = () => {
 
             {/* Role Field */}
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Role *
               </label>
               <select
@@ -220,14 +231,26 @@ const NewUser = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-colors"
               >
                 <option value="USER">User</option>
-                <option value="ADMIN" disabled={currentUser?.role !== 'SUPER_ADMIN'}>
-                  Administrator {currentUser?.role !== 'SUPER_ADMIN' ? '(Super Admin only)' : ''}
+                <option
+                  value="ADMIN"
+                  disabled={currentUser?.role !== "SUPER_ADMIN"}
+                >
+                  Administrator{" "}
+                  {currentUser?.role !== "SUPER_ADMIN"
+                    ? "(Super Admin only)"
+                    : ""}
                 </option>
-                <option value="SUPER_ADMIN" disabled={currentUser?.role !== 'SUPER_ADMIN'}>
-                  Super Administrator {currentUser?.role !== 'SUPER_ADMIN' ? '(Super Admin only)' : ''}
+                <option
+                  value="SUPER_ADMIN"
+                  disabled={currentUser?.role !== "SUPER_ADMIN"}
+                >
+                  Super Administrator{" "}
+                  {currentUser?.role !== "SUPER_ADMIN"
+                    ? "(Super Admin only)"
+                    : ""}
                 </option>
               </select>
-              {currentUser?.role !== 'SUPER_ADMIN' && (
+              {currentUser?.role !== "SUPER_ADMIN" && (
                 <p className="text-sm text-gray-500 mt-1">
                   Only Super Administrators can create Admin users
                 </p>
@@ -237,7 +260,10 @@ const NewUser = () => {
             {/* Password Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Password *
                 </label>
                 <input
@@ -250,11 +276,16 @@ const NewUser = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="Enter password"
                 />
-                <p className="text-sm text-gray-500 mt-1">Minimum 6 characters</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Minimum 6 characters
+                </p>
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Confirm Password *
                 </label>
                 <input
@@ -303,11 +334,21 @@ const NewUser = () => {
 
         {/* Help Text */}
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-blue-800 mb-2">Role Permissions</h3>
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">
+            Role Permissions
+          </h3>
           <ul className="space-y-2 text-sm text-blue-700">
-            <li><strong>User:</strong> Access to main toolkit only</li>
-            <li><strong>Administrator:</strong> Can manage users but cannot create other administrators</li>
-            <li><strong>Super Administrator:</strong> Full access including creating administrators</li>
+            <li>
+              <strong>User:</strong> Access to main toolkit only
+            </li>
+            <li>
+              <strong>Administrator:</strong> Can manage users but cannot create
+              other administrators
+            </li>
+            <li>
+              <strong>Super Administrator:</strong> Full access including
+              creating administrators
+            </li>
           </ul>
         </div>
       </div>

@@ -5,6 +5,7 @@ A comprehensive Next.js boilerplate with TypeScript, Tailwind CSS, authenticatio
 ## ✨ Features
 
 ### 🏗️ Foundation Stack
+
 - **Next.js 14** with App Router
 - **TypeScript** for type safety
 - **Tailwind CSS** for styling
@@ -13,6 +14,7 @@ A comprehensive Next.js boilerplate with TypeScript, Tailwind CSS, authenticatio
 - **Responsive design** patterns
 
 ### 🔐 Authentication System
+
 - Role-based authentication (User/Admin)
 - Password-protected access
 - localStorage session management
@@ -20,6 +22,7 @@ A comprehensive Next.js boilerplate with TypeScript, Tailwind CSS, authenticatio
 - Clean login/logout flow
 
 ### 🎨 UI Components
+
 - Complete shadcn/ui component library
 - Professional header/footer
 - Tool card layout system
@@ -27,6 +30,7 @@ A comprehensive Next.js boilerplate with TypeScript, Tailwind CSS, authenticatio
 - Customizable themes and colors
 
 ### 🔧 Development Tools
+
 - **ESLint** with comprehensive rules
 - **Prettier** code formatting
 - **Husky** pre-commit hooks
@@ -34,6 +38,7 @@ A comprehensive Next.js boilerplate with TypeScript, Tailwind CSS, authenticatio
 - Quality gates (lint, format, type-check)
 
 ### 🚀 Integration Ready
+
 - **Anthropic AI SDK** setup
 - **Puppeteer** for PDF generation
 - **Markdown Editor** integration
@@ -43,29 +48,35 @@ A comprehensive Next.js boilerplate with TypeScript, Tailwind CSS, authenticatio
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18.0 or later
 - npm or yarn package manager
 
 ### Installation
 
 1. **Clone or download this boilerplate**
+
    ```bash
    git clone <your-repo-url> my-ai-app
    cd my-ai-app
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.local.example .env.local
    ```
+
    Edit `.env.local` with your configuration.
 
 4. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -76,6 +87,7 @@ A comprehensive Next.js boilerplate with TypeScript, Tailwind CSS, authenticatio
 ## 🔧 Configuration
 
 ### Environment Variables
+
 Create `.env.local` with these variables:
 
 ```bash
@@ -92,25 +104,29 @@ ANTHROPIC_API_KEY=your_anthropic_key
 ### Customization
 
 #### 1. **Branding**
+
 - Update `src/app/layout.tsx` metadata
 - Replace favicon files in `public/`
 - Modify header branding in `src/components/Header.tsx`
 
 #### 2. **Colors & Theme**
+
 - Customize Tailwind config in `tailwind.config.ts`
 - Update CSS variables in `src/app/globals.css`
 - Modify component themes in tool sections
 
 #### 3. **Tool Configuration**
+
 Edit the tool definitions in `src/app/page.tsx`:
+
 ```typescript
 const dataTools = [
   {
-    title: 'Your Tool Name',
-    description: 'Tool description',
-    href: '/your-tool-route',
-    comingSoon: false
-  }
+    title: "Your Tool Name",
+    description: "Tool description",
+    href: "/your-tool-route",
+    comingSoon: false,
+  },
 ];
 ```
 
@@ -146,6 +162,7 @@ const dataTools = [
 ## 🛠️ Development
 
 ### Available Scripts
+
 ```bash
 npm run dev          # Start development server
 npm run build        # Build for production
@@ -158,16 +175,19 @@ npm run quality      # Run all quality checks
 ```
 
 ### Adding New Pages
+
 1. Create a new file in `src/app/your-page/page.tsx`
 2. Add authentication wrapper if needed
 3. Update navigation or tool links
 
 ### Adding New API Routes
+
 1. Create `src/app/api/your-endpoint/route.ts`
 2. Implement GET, POST, etc. handlers
 3. Add error handling and validation
 
 ### Adding New Components
+
 1. Create component in `src/components/`
 2. Use existing shadcn/ui components
 3. Follow TypeScript patterns
@@ -176,11 +196,13 @@ npm run quality      # Run all quality checks
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 1. Connect your repository to Vercel
 2. Set environment variables in Vercel dashboard
 3. Deploy automatically on push
 
 ### Other Platforms
+
 1. Build the application: `npm run build`
 2. Deploy the `.next` folder and `public/` directory
 3. Ensure Node.js runtime is available
@@ -189,7 +211,9 @@ npm run quality      # Run all quality checks
 ## 🎨 Customization Guide
 
 ### Theme Colors
+
 Update these CSS variables in `globals.css`:
+
 ```css
 :root {
   --primary: 221 83% 53%; /* Blue */
@@ -199,15 +223,18 @@ Update these CSS variables in `globals.css`:
 ```
 
 ### Component Themes
+
 Modify theme configurations in components:
+
 ```typescript
 const themeColors = {
-  blue: { bg: 'from-blue-50', accent: 'text-blue-600' },
+  blue: { bg: "from-blue-50", accent: "text-blue-600" },
   // Add your themes
 };
 ```
 
 ### Adding New Tool Categories
+
 1. Define tools array in `page.tsx`
 2. Add new theme to `ToolSection.tsx`
 3. Create corresponding pages/routes
@@ -215,7 +242,7 @@ const themeColors = {
 ## 🔐 Security
 
 - Passwords are verified server-side only
-- No sensitive data in client-side code  
+- No sensitive data in client-side code
 - Environment variables for configuration
 - HTTPS recommended for production
 - Regular dependency updates recommended
@@ -235,6 +262,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 For questions and support:
+
 - Check the [Next.js documentation](https://nextjs.org/docs)
 - Review [Tailwind CSS docs](https://tailwindcss.com/docs)
 - Explore [shadcn/ui components](https://ui.shadcn.com/)
@@ -242,6 +270,7 @@ For questions and support:
 ## 🚀 What's Next?
 
 After setting up the boilerplate:
+
 1. Customize branding and colors
 2. Add your specific tool implementations
 3. Integrate your preferred AI services

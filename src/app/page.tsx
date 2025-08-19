@@ -1,17 +1,23 @@
 "use client";
-import { Lock, Loader2, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
-import Image from 'next/image';
-import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Lock,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  Sparkles,
+} from "lucide-react";
+import Image from "next/image";
+import React, { useState, useEffect, useCallback } from "react";
 
-import Header from '../components/Header';
-import ToolSection from '../components/ToolSection';
+import Header from "../components/Header";
+import ToolSection from "../components/ToolSection";
 
 /**
  * AI Toolkit Landing Page
- * 
+ *
  * The main landing page for the AI Toolkit, featuring a clean interface
  * with organized sections for various AI-powered tools.
- * 
+ *
  * Features:
  * - Password-protected access to all tools
  * - Organized tool sections with different themes
@@ -21,165 +27,170 @@ import ToolSection from '../components/ToolSection';
 
 const AIToolkit = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [currentUser, setCurrentUser] = useState<{
     id: string;
     email: string;
     name: string;
-    role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+    role: "USER" | "ADMIN" | "SUPER_ADMIN";
   } | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  
+
   useEffect(() => {
     // Check if user is already authenticated (JWT token in localStorage)
     const checkAuth = () => {
-      const token = localStorage.getItem('ai_toolkit_token');
-      const userData = localStorage.getItem('ai_toolkit_user');
-      
+      const token = localStorage.getItem("ai_toolkit_token");
+      const userData = localStorage.getItem("ai_toolkit_user");
+
       if (token && userData) {
         try {
           const user = JSON.parse(userData);
           setIsAuthenticated(true);
           setCurrentUser(user);
         } catch (error) {
-          console.error('Error parsing user data:', error);
-          localStorage.removeItem('ai_toolkit_token');
-          localStorage.removeItem('ai_toolkit_user');
+          console.error("Error parsing user data:", error);
+          localStorage.removeItem("ai_toolkit_token");
+          localStorage.removeItem("ai_toolkit_user");
           setIsAuthenticated(false);
         }
       } else {
         setIsAuthenticated(false);
       }
     };
-    
+
     // Small delay to ensure DOM is ready
     setTimeout(checkAuth, 100);
   }, []);
-  
-  const handlePasswordSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordError('');
-    setIsAuthenticating(true);
-    
-    try {
-      const response = await fetch('/api/verify-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to verify credentials');
+
+  const handlePasswordSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setPasswordError("");
+      setIsAuthenticating(true);
+
+      try {
+        const response = await fetch("/api/verify-password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to verify credentials");
+        }
+
+        const { isValid, token, user } = await response.json();
+
+        if (isValid && token && user) {
+          setIsAuthenticated(true);
+          setCurrentUser(user);
+          localStorage.setItem("ai_toolkit_token", token);
+          localStorage.setItem("ai_toolkit_user", JSON.stringify(user));
+          setPasswordError("");
+        } else {
+          setPasswordError("Invalid credentials. Please try again.");
+          setPassword("");
+        }
+      } catch (error: any) {
+        console.error("Authentication error:", error);
+        setPasswordError(
+          error.message || "Error verifying credentials. Please try again.",
+        );
+        setPassword("");
+      } finally {
+        setIsAuthenticating(false);
       }
-      
-      const { isValid, token, user } = await response.json();
-      
-      if (isValid && token && user) {
-        setIsAuthenticated(true);
-        setCurrentUser(user);
-        localStorage.setItem('ai_toolkit_token', token);
-        localStorage.setItem('ai_toolkit_user', JSON.stringify(user));
-        setPasswordError('');
-      } else {
-        setPasswordError('Invalid credentials. Please try again.');
-        setPassword('');
-      }
-    } catch (error: any) {
-      console.error('Authentication error:', error);
-      setPasswordError(error.message || 'Error verifying credentials. Please try again.');
-      setPassword('');
-    } finally {
-      setIsAuthenticating(false);
-    }
-  }, [email, password]);
-  
+    },
+    [email, password],
+  );
+
   const handleLogout = useCallback(() => {
-    console.log('Logging out...');
+    console.log("Logging out...");
     setIsAuthenticated(false);
     setCurrentUser(null);
-    localStorage.removeItem('ai_toolkit_token');
-    localStorage.removeItem('ai_toolkit_user');
-    setEmail('');
-    setPassword('');
+    localStorage.removeItem("ai_toolkit_token");
+    localStorage.removeItem("ai_toolkit_user");
+    setEmail("");
+    setPassword("");
   }, []);
 
   // Tool definitions - customize these for your application
   const dataTools = [
     {
-      title: 'Data Analysis',
-      description: 'Analyze and visualize your data with AI-powered insights',
-      href: '/data-analysis',
-      comingSoon: false
+      title: "Data Analysis",
+      description: "Analyze and visualize your data with AI-powered insights",
+      href: "/data-analysis",
+      comingSoon: false,
     },
     {
-      title: 'Data Import',
-      description: 'Import and process data from various sources',
-      comingSoon: true
+      title: "Data Import",
+      description: "Import and process data from various sources",
+      comingSoon: true,
     },
     {
-      title: 'Data Export',
-      description: 'Export processed data in multiple formats',
-      comingSoon: true
-    }
+      title: "Data Export",
+      description: "Export processed data in multiple formats",
+      comingSoon: true,
+    },
   ];
 
   const generateTools = [
     {
-      title: 'Content Generator',
-      description: 'Generate content using AI language models',
-      comingSoon: true
+      title: "Content Generator",
+      description: "Generate content using AI language models",
+      comingSoon: true,
     },
     {
-      title: 'Report Builder',
-      description: 'Create automated reports from your data',
-      comingSoon: true
+      title: "Report Builder",
+      description: "Create automated reports from your data",
+      comingSoon: true,
     },
     {
-      title: 'Document Templates',
-      description: 'Generate documents from predefined templates',
-      comingSoon: true
-    }
+      title: "Document Templates",
+      description: "Generate documents from predefined templates",
+      comingSoon: true,
+    },
   ];
 
   const analyzeTools = [
     {
-      title: 'Text Analysis',
-      description: 'Analyze text for sentiment, topics, and insights',
-      comingSoon: true
+      title: "Text Analysis",
+      description: "Analyze text for sentiment, topics, and insights",
+      comingSoon: true,
     },
     {
-      title: 'Image Recognition',
-      description: 'Analyze and categorize images using AI',
-      comingSoon: true
+      title: "Image Recognition",
+      description: "Analyze and categorize images using AI",
+      comingSoon: true,
     },
     {
-      title: 'Pattern Detection',
-      description: 'Detect patterns and anomalies in your data',
-      comingSoon: true
-    }
+      title: "Pattern Detection",
+      description: "Detect patterns and anomalies in your data",
+      comingSoon: true,
+    },
   ];
 
   const automateTools = [
     {
-      title: 'Workflow Automation',
-      description: 'Automate repetitive tasks and workflows',
-      comingSoon: true
+      title: "Workflow Automation",
+      description: "Automate repetitive tasks and workflows",
+      comingSoon: true,
     },
     {
-      title: 'Email Processing',
-      description: 'Automatically process and categorize emails',
-      comingSoon: true
+      title: "Email Processing",
+      description: "Automatically process and categorize emails",
+      comingSoon: true,
     },
     {
-      title: 'Scheduled Tasks',
-      description: 'Set up automated recurring tasks',
-      comingSoon: true
-    }
+      title: "Scheduled Tasks",
+      description: "Set up automated recurring tasks",
+      comingSoon: true,
+    },
   ];
 
   // Show enhanced loading while checking authentication
@@ -189,11 +200,19 @@ const AIToolkit = () => {
         <div className="text-center">
           <div className="relative">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-600 mx-auto mb-6"></div>
-            <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-blue-600" size={20} />
+            <Sparkles
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-blue-600"
+              size={20}
+            />
           </div>
-          <p className="text-gray-600 font-medium">Initializing AI Toolkit...</p>
+          <p className="text-gray-600 font-medium">
+            Initializing AI Toolkit...
+          </p>
           <div className="mt-2 w-48 bg-gray-200 rounded-full h-1 mx-auto">
-            <div className="bg-blue-600 h-1 rounded-full animate-pulse" style={{ width: '70%' }}></div>
+            <div
+              className="bg-blue-600 h-1 rounded-full animate-pulse"
+              style={{ width: "70%" }}
+            ></div>
           </div>
         </div>
       </div>
@@ -220,20 +239,30 @@ const AIToolkit = () => {
             <h1 className="text-2xl font-bold text-white mb-1">AI Toolkit</h1>
             <p className="text-red-100 text-sm">Secure Access Portal</p>
           </div>
-          
+
           <div className="p-8">
             <div className="text-center mb-6">
-              <p className="text-gray-600 mb-4">Please authenticate to access the toolkit</p>
+              <p className="text-gray-600 mb-4">
+                Please authenticate to access the toolkit
+              </p>
               <div className="flex justify-center space-x-2 mb-4">
                 <div className="w-2 h-2 bg-brand-secondary-blue rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-brand-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-brand-secondary-green rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                <div
+                  className="w-2 h-2 bg-brand-primary rounded-full animate-pulse"
+                  style={{ animationDelay: "0.2s" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-brand-secondary-green rounded-full animate-pulse"
+                  style={{ animationDelay: "0.4s" }}
+                ></div>
               </div>
             </div>
-          
+
             <form onSubmit={handlePasswordSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   id="email"
@@ -245,9 +274,11 @@ const AIToolkit = () => {
                   disabled={isAuthenticating}
                 />
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
                 <input
                   type="password"
                   id="password"
@@ -259,14 +290,14 @@ const AIToolkit = () => {
                   disabled={isAuthenticating}
                 />
               </div>
-              
+
               {passwordError && (
                 <div className="flex items-center space-x-2 text-red-600 text-sm bg-red-50 p-4 rounded-xl border border-red-200">
                   <AlertCircle size={16} />
                   <span>{passwordError}</span>
                 </div>
               )}
-              
+
               <button
                 type="submit"
                 disabled={isAuthenticating}
@@ -285,7 +316,7 @@ const AIToolkit = () => {
                 )}
               </button>
             </form>
-            
+
             <div className="mt-6 text-center">
               <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
                 <Lock size={12} />
@@ -300,10 +331,16 @@ const AIToolkit = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <Header onLogout={handleLogout} userRole={
-        currentUser?.role === 'ADMIN' ? 'admin' : 
-        currentUser?.role === 'SUPER_ADMIN' ? 'super_admin' : 'user'
-      } />
+      <Header
+        onLogout={handleLogout}
+        userRole={
+          currentUser?.role === "ADMIN"
+            ? "admin"
+            : currentUser?.role === "SUPER_ADMIN"
+              ? "super_admin"
+              : "user"
+        }
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -315,35 +352,21 @@ const AIToolkit = () => {
                 <Sparkles className="mr-3" size={36} />
                 AI Toolkit
               </h1>
-              <p className="text-red-100">AI-powered tools for modern applications</p>
+              <p className="text-red-100">
+                AI-powered tools for modern applications
+              </p>
             </div>
           </div>
         </div>
 
         {/* Tool Sections */}
-        <ToolSection
-          title="Data Tools"
-          theme="data"
-          tools={dataTools}
-        />
+        <ToolSection title="Data Tools" theme="data" tools={dataTools} />
 
-        <ToolSection
-          title="Generate"
-          theme="generate"
-          tools={generateTools}
-        />
+        <ToolSection title="Generate" theme="generate" tools={generateTools} />
 
-        <ToolSection
-          title="Analyze"
-          theme="analyze"
-          tools={analyzeTools}
-        />
+        <ToolSection title="Analyze" theme="analyze" tools={analyzeTools} />
 
-        <ToolSection
-          title="Automate"
-          theme="automate"
-          tools={automateTools}
-        />
+        <ToolSection title="Automate" theme="automate" tools={automateTools} />
       </div>
 
       {/* Footer */}
@@ -360,7 +383,7 @@ const AIToolkit = () => {
                 Empowering teams with intelligent automation and analysis tools.
               </p>
             </div>
-            
+
             {/* Status */}
             <div className="text-center md:text-right">
               <h4 className="text-lg font-semibold mb-3">Platform Status</h4>
@@ -376,10 +399,13 @@ const AIToolkit = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Bottom bar */}
           <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400 text-xs">
-            <p>© 2025 AI Toolkit • Powered by Next.js, TypeScript, and Tailwind CSS</p>
+            <p>
+              © 2025 AI Toolkit • Powered by Next.js, TypeScript, and Tailwind
+              CSS
+            </p>
           </div>
         </div>
       </footer>

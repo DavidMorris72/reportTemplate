@@ -1,47 +1,47 @@
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { prisma } from '@/lib/prisma';
-import { getJwtSecret } from '@/lib/env';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { prisma } from "@/lib/prisma";
+import { getJwtSecret } from "@/lib/env";
+import { z } from "zod";
 
 // Force runtime to be nodejs to ensure proper server-side execution
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 // Validation schemas
 const CreateUserSchema = z.object({
   email: z.string().email(),
   name: z.string().min(1),
   password: z.string().min(6),
-  role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN'])
+  role: z.enum(["USER", "ADMIN", "SUPER_ADMIN"]),
 });
 
 const UpdateUserSchema = z.object({
   email: z.string().email().optional(),
   name: z.string().min(1).optional(),
   password: z.string().min(6).optional(),
-  role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']).optional()
+  role: z.enum(["USER", "ADMIN", "SUPER_ADMIN"]).optional(),
 });
 
 // Helper function to verify admin token
 async function verifyAdminToken(request: NextRequest) {
-  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
-  
+  const token = request.headers.get("Authorization")?.replace("Bearer ", "");
+
   if (!token) {
-    throw new Error('No token provided');
+    throw new Error("No token provided");
   }
 
   try {
     const jwtSecret = getJwtSecret();
     const decoded = jwt.verify(token, jwtSecret) as any;
-    
-    if (decoded.role !== 'ADMIN' && decoded.role !== 'SUPER_ADMIN') {
-      throw new Error('Insufficient permissions');
+
+    if (decoded.role !== "ADMIN" && decoded.role !== "SUPER_ADMIN") {
+      throw new Error("Insufficient permissions");
     }
 
     return decoded;
   } catch (error) {
-    throw new Error('Invalid token');
+    throw new Error("Invalid token");
   }
 }
 
@@ -51,8 +51,8 @@ export async function GET(request: NextRequest) {
     // Check if Prisma client is available
     if (!prisma) {
       return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 503 }
+        { error: "Database not available" },
+        { status: 503 },
       );
     }
 
@@ -65,19 +65,19 @@ export async function GET(request: NextRequest) {
         name: true,
         role: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     return NextResponse.json({ users });
   } catch (error: any) {
-    console.error('Error fetching users:', error);
+    console.error("Error fetching users:", error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch users' },
-      { status: error.message === 'Insufficient permissions' ? 403 : 401 }
+      { error: error.message || "Failed to fetch users" },
+      { status: error.message === "Insufficient permissions" ? 403 : 401 },
     );
   }
 }
@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
     // Check if Prisma client is available
     if (!prisma) {
       return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 503 }
+        { error: "Database not available" },
+        { status: 503 },
       );
     }
 
@@ -101,22 +101,25 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: validatedData.email.toLowerCase() }
+      where: { email: validatedData.email.toLowerCase() },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 400 }
+        { error: "User with this email already exists" },
+        { status: 400 },
       );
     }
 
     // Only Super Admins can create other Admins
-    if (validatedData.role === 'ADMIN' || validatedData.role === 'SUPER_ADMIN') {
-      if (currentUser.role !== 'SUPER_ADMIN') {
+    if (
+      validatedData.role === "ADMIN" ||
+      validatedData.role === "SUPER_ADMIN"
+    ) {
+      if (currentUser.role !== "SUPER_ADMIN") {
         return NextResponse.json(
-          { error: 'Only Super Administrators can create Admin users' },
-          { status: 403 }
+          { error: "Only Super Administrators can create Admin users" },
+          { status: 403 },
         );
       }
     }
@@ -130,7 +133,7 @@ export async function POST(request: NextRequest) {
         email: validatedData.email.toLowerCase(),
         name: validatedData.name,
         hashedPassword,
-        role: validatedData.role
+        role: validatedData.role,
       },
       select: {
         id: true,
@@ -138,24 +141,24 @@ export async function POST(request: NextRequest) {
         name: true,
         role: true,
         createdAt: true,
-        updatedAt: true
-      }
+        updatedAt: true,
+      },
     });
 
     return NextResponse.json({ user: newUser }, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating user:', error);
-    
+    console.error("Error creating user:", error);
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.issues },
-        { status: 400 }
+        { error: "Invalid input data", details: error.issues },
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
-      { error: error.message || 'Failed to create user' },
-      { status: error.message === 'Insufficient permissions' ? 403 : 500 }
+      { error: error.message || "Failed to create user" },
+      { status: error.message === "Insufficient permissions" ? 403 : 500 },
     );
   }
 }

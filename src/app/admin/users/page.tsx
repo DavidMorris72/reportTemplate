@@ -1,16 +1,25 @@
 "use client";
-import { Users, UserPlus, Edit, Trash2, Search, Shield, User, Crown } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import {
+  Users,
+  UserPlus,
+  Edit,
+  Trash2,
+  Search,
+  Shield,
+  User,
+  Crown,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 
-import Header from '../../../components/Header';
+import Header from "../../../components/Header";
 
 interface User {
   id: string;
   email: string;
   name: string;
-  role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+  role: "USER" | "ADMIN" | "SUPER_ADMIN";
   createdAt: string;
   updatedAt: string;
 }
@@ -19,7 +28,7 @@ interface CurrentUser {
   id: string;
   email: string;
   name: string;
-  role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+  role: "USER" | "ADMIN" | "SUPER_ADMIN";
 }
 
 const UserManagement = () => {
@@ -28,52 +37,54 @@ const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'ALL' | 'USER' | 'ADMIN' | 'SUPER_ADMIN'>('ALL');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<
+    "ALL" | "USER" | "ADMIN" | "SUPER_ADMIN"
+  >("ALL");
 
   useEffect(() => {
     // Check authentication
-    const userData = localStorage.getItem('ai_toolkit_user');
-    const token = localStorage.getItem('ai_toolkit_token');
-    
+    const userData = localStorage.getItem("ai_toolkit_user");
+    const token = localStorage.getItem("ai_toolkit_token");
+
     if (!token || !userData) {
-      router.push('/');
+      router.push("/");
       return;
     }
 
     try {
       const user = JSON.parse(userData);
-      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
         setCurrentUser(user);
         fetchUsers(token);
       } else {
-        router.push('/');
+        router.push("/");
         return;
       }
     } catch (error) {
-      console.error('Error parsing user data:', error);
-      router.push('/');
+      console.error("Error parsing user data:", error);
+      router.push("/");
       return;
     }
   }, [router]);
 
   const fetchUsers = async (token: string) => {
     try {
-      const response = await fetch('/api/users', {
+      const response = await fetch("/api/users", {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch users');
+        throw new Error("Failed to fetch users");
       }
 
       const data = await response.json();
       setUsers(data.users);
       setFilteredUsers(data.users);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
     } finally {
       setIsLoading(false);
     }
@@ -84,58 +95,63 @@ const UserManagement = () => {
     let filtered = users;
 
     if (searchTerm) {
-      filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (user) =>
+          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
-    if (roleFilter !== 'ALL') {
-      filtered = filtered.filter(user => user.role === roleFilter);
+    if (roleFilter !== "ALL") {
+      filtered = filtered.filter((user) => user.role === roleFilter);
     }
 
     setFilteredUsers(filtered);
   }, [users, searchTerm, roleFilter]);
 
   const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete user "${userName}"? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
-    const token = localStorage.getItem('ai_toolkit_token');
-    
+    const token = localStorage.getItem("ai_toolkit_token");
+
     try {
       const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to delete user');
+        throw new Error(error.error || "Failed to delete user");
       }
 
       // Refresh users list
       fetchUsers(token!);
     } catch (error: any) {
-      console.error('Error deleting user:', error);
-      alert(error.message || 'Failed to delete user');
+      console.error("Error deleting user:", error);
+      alert(error.message || "Failed to delete user");
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('ai_toolkit_token');
-    localStorage.removeItem('ai_toolkit_user');
-    router.push('/');
+    localStorage.removeItem("ai_toolkit_token");
+    localStorage.removeItem("ai_toolkit_user");
+    router.push("/");
   };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN':
+      case "SUPER_ADMIN":
         return <Crown className="text-yellow-500" size={16} />;
-      case 'ADMIN':
+      case "ADMIN":
         return <Shield className="text-blue-500" size={16} />;
       default:
         return <User className="text-gray-500" size={16} />;
@@ -144,12 +160,12 @@ const UserManagement = () => {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'ADMIN':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case "SUPER_ADMIN":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "ADMIN":
+        return "bg-blue-100 text-blue-800 border-blue-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
@@ -166,9 +182,9 @@ const UserManagement = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <Header 
-        onLogout={handleLogout} 
-        userRole={currentUser?.role === 'ADMIN' ? 'admin' : 'super_admin'} 
+      <Header
+        onLogout={handleLogout}
+        userRole={currentUser?.role === "ADMIN" ? "admin" : "super_admin"}
       />
 
       {/* Main Content */}
@@ -180,7 +196,9 @@ const UserManagement = () => {
               <Users className="mr-3" size={36} />
               User Management
             </h1>
-            <p className="text-gray-600 mt-2">Manage user accounts and permissions</p>
+            <p className="text-gray-600 mt-2">
+              Manage user accounts and permissions
+            </p>
           </div>
           <div className="flex space-x-4">
             <Link href="/admin">
@@ -202,7 +220,10 @@ const UserManagement = () => {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
                 <input
                   type="text"
                   placeholder="Search users by name or email..."
@@ -233,26 +254,47 @@ const UserManagement = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Created
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={user.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {user.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {user.email}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(user.role)}`}>
+                      <div
+                        className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(user.role)}`}
+                      >
                         {getRoleIcon(user.role)}
                         <span>
-                          {user.role === 'SUPER_ADMIN' ? 'Super Admin' : user.role === 'ADMIN' ? 'Admin' : 'User'}
+                          {user.role === "SUPER_ADMIN"
+                            ? "Super Admin"
+                            : user.role === "ADMIN"
+                              ? "Admin"
+                              : "User"}
                         </span>
                       </div>
                     </td>
@@ -281,12 +323,14 @@ const UserManagement = () => {
               </tbody>
             </table>
           </div>
-          
+
           {filteredUsers.length === 0 && (
             <div className="text-center py-12">
               <Users className="mx-auto text-gray-400 mb-4" size={48} />
               <p className="text-gray-500 text-lg">No users found</p>
-              <p className="text-gray-400">Try adjusting your search or filters</p>
+              <p className="text-gray-400">
+                Try adjusting your search or filters
+              </p>
             </div>
           )}
         </div>
@@ -294,15 +338,21 @@ const UserManagement = () => {
         {/* Stats */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 text-center">
-            <div className="text-2xl font-bold text-gray-900">{users.filter(u => u.role === 'USER').length}</div>
+            <div className="text-2xl font-bold text-gray-900">
+              {users.filter((u) => u.role === "USER").length}
+            </div>
             <div className="text-gray-600">Users</div>
           </div>
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 text-center">
-            <div className="text-2xl font-bold text-gray-900">{users.filter(u => u.role === 'ADMIN').length}</div>
+            <div className="text-2xl font-bold text-gray-900">
+              {users.filter((u) => u.role === "ADMIN").length}
+            </div>
             <div className="text-gray-600">Administrators</div>
           </div>
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 text-center">
-            <div className="text-2xl font-bold text-gray-900">{users.filter(u => u.role === 'SUPER_ADMIN').length}</div>
+            <div className="text-2xl font-bold text-gray-900">
+              {users.filter((u) => u.role === "SUPER_ADMIN").length}
+            </div>
             <div className="text-gray-600">Super Administrators</div>
           </div>
         </div>

@@ -1,13 +1,13 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
 const config = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
-	],
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -54,15 +54,15 @@ const config = {
         },
         // DMSI Brand Colors
         brand: {
-          primary: '#cd442c',
-          'primary-gray': '#4d504e',
-          'secondary-blue': '#006ca7',
-          'secondary-green': '#6fb544',
-          'secondary-yellow': '#eaab30',
-          'tertiary-teal': '#42b59f',
-          'tertiary-purple': '#612b52',
-          'logo-red': '#e04403',
-          'logo-gray': '#56585b'
+          primary: "#cd442c",
+          "primary-gray": "#4d504e",
+          "secondary-blue": "#006ca7",
+          "secondary-green": "#6fb544",
+          "secondary-yellow": "#eaab30",
+          "tertiary-teal": "#42b59f",
+          "tertiary-purple": "#612b52",
+          "logo-red": "#e04403",
+          "logo-gray": "#56585b",
         },
       },
       borderRadius: {
@@ -87,6 +87,6 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+} satisfies Config;
 
-export default config
+export default config;

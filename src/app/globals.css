@@ -211,26 +211,26 @@
   .toolkit-generator {
     @apply bg-red-50 text-red-700 border-red-300;
   }
-  
+
   .toolkit-generator-active {
     @apply bg-red-600 text-white border-red-600;
   }
-  
+
   .toolkit-planning {
     @apply bg-blue-50 text-blue-700 border-blue-300;
   }
-  
+
   .toolkit-reports {
     @apply bg-green-50 text-green-700 border-green-300;
   }
-  
+
   .toolkit-card {
     @apply px-6 py-4 rounded-lg border-2 font-medium text-center 
            transition-all duration-200 ease-in-out
            transform hover:scale-105 hover:shadow-md
            h-[80px] flex items-center justify-center;
   }
-  
+
   .toolkit-card-disabled {
     @apply opacity-60 cursor-not-allowed;
   }

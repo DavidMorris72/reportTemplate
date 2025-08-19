@@ -1,11 +1,11 @@
 "use client";
-import { Home, Lock, ArrowLeft, Sparkles } from 'lucide-react';
-import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import { Home, Lock, ArrowLeft, Sparkles } from "lucide-react";
+import Link from "next/link";
+import React, { useState, useEffect } from "react";
 
 /**
  * 404 Not Found Page
- * 
+ *
  * Custom 404 page with conditional navigation based on authentication state.
  * Shows appropriate navigation options depending on whether user is logged in.
  */
@@ -16,10 +16,10 @@ const NotFoundPage = () => {
   useEffect(() => {
     // Check authentication status from localStorage
     const checkAuth = () => {
-      const authenticated = localStorage.getItem('ba_authenticated') === 'true';
+      const authenticated = localStorage.getItem("ba_authenticated") === "true";
       setIsAuthenticated(authenticated);
     };
-    
+
     // Small delay to ensure DOM is ready
     setTimeout(checkAuth, 100);
   }, []);
@@ -42,7 +42,9 @@ const NotFoundPage = () => {
         {/* 404 Visual */}
         <div className="mb-8">
           <div className="relative inline-block">
-            <h1 className="text-9xl font-bold text-gray-200 select-none">404</h1>
+            <h1 className="text-9xl font-bold text-gray-200 select-none">
+              404
+            </h1>
             <div className="absolute inset-0 flex items-center justify-center">
               <Sparkles className="text-red-600 animate-pulse" size={48} />
             </div>
@@ -51,12 +53,16 @@ const NotFoundPage = () => {
 
         {/* Error Message */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Page Not Found</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Page Not Found
+          </h2>
           <p className="text-lg text-gray-600 mb-2">
-            The page you&apos;re looking for doesn&apos;t exist or has been moved.
+            The page you&apos;re looking for doesn&apos;t exist or has been
+            moved.
           </p>
           <p className="text-sm text-gray-500">
-            Don&apos;t worry, even the best AI systems sometimes take a wrong turn!
+            Don&apos;t worry, even the best AI systems sometimes take a wrong
+            turn!
           </p>
         </div>
 
@@ -72,7 +78,7 @@ const NotFoundPage = () => {
                 <Home size={20} />
                 <span>Return to Dashboard</span>
               </Link>
-              
+
               <div className="text-center">
                 <button
                   onClick={() => window.history.back()}
@@ -93,7 +99,7 @@ const NotFoundPage = () => {
                 <Lock size={20} />
                 <span>Go to Login</span>
               </Link>
-              
+
               <div className="text-center">
                 <button
                   onClick={() => window.history.back()}
@@ -109,7 +115,9 @@ const NotFoundPage = () => {
 
         {/* Helpful Links */}
         <div className="mt-12 p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Popular Tools</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Popular Tools
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             {isAuthenticated ? (
               <>
@@ -139,7 +147,10 @@ const NotFoundPage = () => {
 
         {/* Footer */}
         <div className="mt-8 text-center text-xs text-gray-500">
-          <p>© 2025 Frameworks AI Toolkit • Specialized for Building & Timber Industry ERP Development</p>
+          <p>
+            © 2025 Frameworks AI Toolkit • Specialized for Building & Timber
+            Industry ERP Development
+          </p>
         </div>
       </div>
     </div>

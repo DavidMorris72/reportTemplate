@@ -1,23 +1,31 @@
 "use client";
-import { Edit, ArrowLeft, Save, AlertCircle, User, Shield, Crown } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import {
+  Edit,
+  ArrowLeft,
+  Save,
+  AlertCircle,
+  User,
+  Shield,
+  Crown,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 
-import Header from '../../../../../components/Header';
+import Header from "../../../../../components/Header";
 
 interface CurrentUser {
   id: string;
   email: string;
   name: string;
-  role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+  role: "USER" | "ADMIN" | "SUPER_ADMIN";
 }
 
 interface EditUser {
   id: string;
   email: string;
   name: string;
-  role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+  role: "USER" | "ADMIN" | "SUPER_ADMIN";
   createdAt: string;
   updatedAt: string;
 }
@@ -28,38 +36,38 @@ const EditUser = ({ params }: { params: { id: string } }) => {
   const [user, setUser] = useState<EditUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
-  
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
-    email: '',
-    name: '',
-    password: '',
-    confirmPassword: '',
-    role: 'USER' as 'USER' | 'ADMIN' | 'SUPER_ADMIN'
+    email: "",
+    name: "",
+    password: "",
+    confirmPassword: "",
+    role: "USER" as "USER" | "ADMIN" | "SUPER_ADMIN",
   });
 
   useEffect(() => {
     // Check authentication
-    const userData = localStorage.getItem('ai_toolkit_user');
-    const token = localStorage.getItem('ai_toolkit_token');
-    
+    const userData = localStorage.getItem("ai_toolkit_user");
+    const token = localStorage.getItem("ai_toolkit_token");
+
     if (!token || !userData) {
-      router.push('/');
+      router.push("/");
       return;
     }
 
     try {
       const user = JSON.parse(userData);
-      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
         setCurrentUser(user);
         fetchUser(token);
       } else {
-        router.push('/');
+        router.push("/");
         return;
       }
     } catch (error) {
-      console.error('Error parsing user data:', error);
-      router.push('/');
+      console.error("Error parsing user data:", error);
+      router.push("/");
       return;
     }
   }, [router]);
@@ -68,12 +76,12 @@ const EditUser = ({ params }: { params: { id: string } }) => {
     try {
       const response = await fetch(`/api/users/${params.id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user');
+        throw new Error("Failed to fetch user");
       }
 
       const data = await response.json();
@@ -81,57 +89,59 @@ const EditUser = ({ params }: { params: { id: string } }) => {
       setFormData({
         email: data.user.email,
         name: data.user.name,
-        password: '',
-        confirmPassword: '',
-        role: data.user.role
+        password: "",
+        confirmPassword: "",
+        role: data.user.role,
       });
     } catch (error) {
-      console.error('Error fetching user:', error);
-      setError('Failed to load user data');
+      console.error("Error fetching user:", error);
+      setError("Failed to load user data");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Clear error when user starts typing
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Validation
     if (!formData.email || !formData.name) {
-      setError('Please fill in all required fields');
+      setError("Please fill in all required fields");
       return;
     }
 
     if (formData.password && formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     if (formData.password && formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError("Password must be at least 6 characters long");
       return;
     }
 
-    const token = localStorage.getItem('ai_toolkit_token');
+    const token = localStorage.getItem("ai_toolkit_token");
     setIsSaving(true);
 
     try {
       const updateData: any = {
         email: formData.email,
         name: formData.name,
-        role: formData.role
+        role: formData.role,
       };
 
       // Only include password if it's being changed
@@ -140,40 +150,40 @@ const EditUser = ({ params }: { params: { id: string } }) => {
       }
 
       const response = await fetch(`/api/users/${params.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update user');
+        throw new Error(errorData.error || "Failed to update user");
       }
 
       // Success! Redirect to users list
-      router.push('/admin/users');
+      router.push("/admin/users");
     } catch (error: any) {
-      console.error('Error updating user:', error);
-      setError(error.message || 'Failed to update user');
+      console.error("Error updating user:", error);
+      setError(error.message || "Failed to update user");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('ai_toolkit_token');
-    localStorage.removeItem('ai_toolkit_user');
-    router.push('/');
+    localStorage.removeItem("ai_toolkit_token");
+    localStorage.removeItem("ai_toolkit_user");
+    router.push("/");
   };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN':
+      case "SUPER_ADMIN":
         return <Crown className="text-yellow-500" size={20} />;
-      case 'ADMIN':
+      case "ADMIN":
         return <Shield className="text-blue-500" size={20} />;
       default:
         return <User className="text-gray-500" size={20} />;
@@ -209,9 +219,9 @@ const EditUser = ({ params }: { params: { id: string } }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <Header 
-        onLogout={handleLogout} 
-        userRole={currentUser?.role === 'ADMIN' ? 'admin' : 'super_admin'} 
+      <Header
+        onLogout={handleLogout}
+        userRole={currentUser?.role === "ADMIN" ? "admin" : "super_admin"}
       />
 
       {/* Main Content */}
@@ -228,7 +238,9 @@ const EditUser = ({ params }: { params: { id: string } }) => {
               <Edit className="mr-3" size={36} />
               Edit User
             </h1>
-            <p className="text-gray-600 mt-2">Update user account information</p>
+            <p className="text-gray-600 mt-2">
+              Update user account information
+            </p>
           </div>
         </div>
 
@@ -237,11 +249,13 @@ const EditUser = ({ params }: { params: { id: string } }) => {
           <div className="flex items-center space-x-4">
             {getRoleIcon(user.role)}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {user.name}
+              </h3>
               <p className="text-gray-600">{user.email}</p>
               <p className="text-sm text-gray-500">
-                Created: {new Date(user.createdAt).toLocaleDateString()} • 
-                Last updated: {new Date(user.updatedAt).toLocaleDateString()}
+                Created: {new Date(user.createdAt).toLocaleDateString()} • Last
+                updated: {new Date(user.updatedAt).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -260,7 +274,10 @@ const EditUser = ({ params }: { params: { id: string } }) => {
 
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Full Name *
               </label>
               <input
@@ -277,7 +294,10 @@ const EditUser = ({ params }: { params: { id: string } }) => {
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email Address *
               </label>
               <input
@@ -294,7 +314,10 @@ const EditUser = ({ params }: { params: { id: string } }) => {
 
             {/* Role Field */}
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Role *
               </label>
               <select
@@ -306,14 +329,26 @@ const EditUser = ({ params }: { params: { id: string } }) => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-colors"
               >
                 <option value="USER">User</option>
-                <option value="ADMIN" disabled={currentUser?.role !== 'SUPER_ADMIN'}>
-                  Administrator {currentUser?.role !== 'SUPER_ADMIN' ? '(Super Admin only)' : ''}
+                <option
+                  value="ADMIN"
+                  disabled={currentUser?.role !== "SUPER_ADMIN"}
+                >
+                  Administrator{" "}
+                  {currentUser?.role !== "SUPER_ADMIN"
+                    ? "(Super Admin only)"
+                    : ""}
                 </option>
-                <option value="SUPER_ADMIN" disabled={currentUser?.role !== 'SUPER_ADMIN'}>
-                  Super Administrator {currentUser?.role !== 'SUPER_ADMIN' ? '(Super Admin only)' : ''}
+                <option
+                  value="SUPER_ADMIN"
+                  disabled={currentUser?.role !== "SUPER_ADMIN"}
+                >
+                  Super Administrator{" "}
+                  {currentUser?.role !== "SUPER_ADMIN"
+                    ? "(Super Admin only)"
+                    : ""}
                 </option>
               </select>
-              {currentUser?.role !== 'SUPER_ADMIN' && (
+              {currentUser?.role !== "SUPER_ADMIN" && (
                 <p className="text-sm text-gray-500 mt-1">
                   Only Super Administrators can modify Admin roles
                 </p>
@@ -322,10 +357,15 @@ const EditUser = ({ params }: { params: { id: string } }) => {
 
             {/* Password Fields */}
             <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Change Password (Optional)</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Change Password (Optional)
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     New Password
                   </label>
                   <input
@@ -337,11 +377,16 @@ const EditUser = ({ params }: { params: { id: string } }) => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     placeholder="Leave blank to keep current password"
                   />
-                  <p className="text-sm text-gray-500 mt-1">Minimum 6 characters</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Minimum 6 characters
+                  </p>
                 </div>
 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Confirm New Password
                   </label>
                   <input
